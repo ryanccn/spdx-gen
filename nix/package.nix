@@ -7,6 +7,8 @@
   installShellFiles,
   pkg-config,
   self,
+  hostPlatform,
+  buildPlatform,
   enableLTO ? true,
   enableOptimizeSize ? false,
 }:
@@ -63,7 +65,7 @@ rustPlatform.buildRustPackage rec {
 
   doCheck = false;
 
-  postInstall = ''
+  postInstall = lib.optionalString (hostPlatform == buildPlatform) ''
     installShellCompletion --cmd ${pname} \
       --bash <("$out/bin/${pname}" --completions bash) \
       --zsh <("$out/bin/${pname}" --completions zsh) \
