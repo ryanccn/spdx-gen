@@ -1,0 +1,113 @@
+name: Build
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      attestations: write
+
+    strategy:
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - x86_64-apple-darwin
+          - aarch64-pc-windows-msvc
+          - x86_64-pc-windows-msvc
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-14
+          - target: x86_64-apple-darwin
+            runner: macos-latest
+          - target: aarch64-pc-windows-msvc
+            runner: windows-latest
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+      fail-fast: false
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-auditable
+        run: cargo install cargo-auditable
+
+      - name: Build
+        run: cargo auditable build --release --locked --target ${{ matrix.target }}
+        env:
+          CARGO_PROFILE_RELEASE_LTO: "fat"
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
+
+      - name: Generate build provenance attestations
+        uses: actions/attest-build-provenance@v1
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            ./target/${{ matrix.target }}/release/spdx-gen
+            ./target/${{ matrix.target }}/release/spdx-gen.exe
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: "error"
+          name: spdx-gen-${{ matrix.target }}
+          path: |
+            ./target/${{ matrix.target }}/release/spdx-gen
+            ./target/${{ matrix.target }}/release/spdx-gen.exe
+
+  linux-static:
+    permissions:
+      id-token: write
+      attestations: write
+
+    strategy:
+      matrix:
+        target:
+          - "x86_64-unknown-linux-musl"
+          - "aarch64-unknown-linux-musl"
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build
+        run: nix build --fallback --print-build-logs '.#spdx-gen-static-${{ matrix.target }}'
+
+      - name: Generate build provenance attestations
+        uses: actions/attest-build-provenance@v1
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          subject-path: ./result/bin/spdx-gen
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: "error"
+          name: spdx-gen-${{ matrix.target }}
+          path: ./result/bin/spdx-gen
