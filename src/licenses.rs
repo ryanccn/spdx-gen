@@ -3,6 +3,8 @@ use tokio::fs;
 
 use eyre::Result;
 
+use crate::update::repo_dir;
+
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct LicenseManifest {
@@ -19,7 +21,7 @@ pub struct License {
 }
 
 pub async fn read_licenses(cache_dir: &Path) -> Result<Vec<License>> {
-    let data = fs::read(cache_dir.join("json").join("licenses.json")).await?;
+    let data = fs::read(repo_dir(cache_dir).join("json").join("licenses.json")).await?;
     let manifest: LicenseManifest = serde_json::from_slice(&data)?;
 
     Ok(manifest
@@ -30,7 +32,7 @@ pub async fn read_licenses(cache_dir: &Path) -> Result<Vec<License>> {
 }
 
 pub async fn read_license_text(cache_dir: &Path, license: &License) -> Result<String> {
-    let path = cache_dir.join("text").join(format!(
+    let path = repo_dir(cache_dir).join("text").join(format!(
         "{}.txt",
         if license.deprecated {
             "deprecated_".to_owned() + &license.id

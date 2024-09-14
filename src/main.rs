@@ -1,37 +1,19 @@
 use std::io;
 use std::{fs, path::PathBuf};
 
-use clap::{CommandFactory as _, Parser, ValueHint};
+use clap::{CommandFactory as _, Parser as _};
 
 use dialoguer::{theme::ColorfulTheme, Confirm, FuzzySelect};
 use eyre::{eyre, Result};
 use owo_colors::{OwoColorize as _, Stream};
 
+mod cli;
 mod licenses;
 mod update;
 
+use crate::cli::Cli;
 use crate::licenses::{read_license_text, read_licenses};
-use crate::update::update_spdx;
-
-#[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-struct Cli {
-    /// An SPDX license identifier (prompts with select if not provided)
-    #[clap(short, long)]
-    license: Option<String>,
-
-    /// The output file path (defaults to LICENSE in the current working directory)
-    #[clap(short, long, value_hint = ValueHint::FilePath)]
-    output: Option<PathBuf>,
-
-    /// Cache directory to use (default is dependent on platform)
-    #[clap(long)]
-    cache_dir: Option<PathBuf>,
-
-    /// Generate completions for a specific shell
-    #[clap(long)]
-    completions: Option<clap_complete::Shell>,
-}
+use crate::update::{auto_update, default_cache_dir, update};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -51,7 +33,19 @@ async fn main() -> Result<()> {
         return Ok(());
     }
 
-    let cache_dir = update_spdx().await?;
+    let cache_dir = match cli.cache_dir {
+        Some(cache_dir) => cache_dir,
+        None => default_cache_dir()?,
+    };
+
+    if cli.update {
+        update(&cache_dir).await?;
+        return Ok(());
+    }
+
+    if !cli.no_update {
+        auto_update(&cache_dir).await?;
+    }
 
     let licenses = read_licenses(&cache_dir).await?;
 
@@ -66,7 +60,7 @@ async fn main() -> Result<()> {
     let license_idx = match &cli.license {
         Some(license) => licenses
             .iter()
-            .position(|l| &l.id == license)
+            .position(|l| l.id.to_lowercase() == license.to_lowercase())
             .ok_or_else(|| eyre!("Invalid SPDX license identifier provided"))?,
 
         None => FuzzySelect::with_theme(&ColorfulTheme::default())
@@ -89,6 +83,7 @@ async fn main() -> Result<()> {
     let output = cli.output.unwrap_or_else(|| PathBuf::from("LICENSE"));
 
     if !output.exists()
+        || cli.force
         || Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt(format!("{} already exists. Overwrite?", output.display()))
             .interact()?

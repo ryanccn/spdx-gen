@@ -7,8 +7,6 @@
   installShellFiles,
   pkg-config,
   self,
-  hostPlatform,
-  buildPlatform,
   enableLTO ? true,
   enableOptimizeSize ? false,
 }:
@@ -27,6 +25,7 @@ rustPlatform.buildRustPackage rec {
     root = self;
     include = [
       "src"
+      "build.rs"
       "Cargo.lock"
       "Cargo.toml"
     ];
@@ -65,11 +64,15 @@ rustPlatform.buildRustPackage rec {
 
   doCheck = false;
 
-  postInstall = lib.optionalString (hostPlatform == buildPlatform) ''
+  preBuild = ''
+    export COMPLETIONS_OUT_DIR="$TMPDIR/completions"
+  '';
+
+  postInstall = ''
     installShellCompletion --cmd ${pname} \
-      --bash <("$out/bin/${pname}" --completions bash) \
-      --zsh <("$out/bin/${pname}" --completions zsh) \
-      --fish <("$out/bin/${pname}" --completions fish)
+      --bash "$TMPDIR/completions/${pname}.bash" \
+      --zsh "$TMPDIR/completions/_${pname}" \
+      --fish "$TMPDIR/completions/${pname}.fish"
   '';
 
   passthru = {

@@ -1,6 +1,6 @@
 use std::{
     io::Cursor,
-    path::PathBuf,
+    path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
 use tokio::fs;
@@ -11,13 +11,55 @@ use owo_colors::{OwoColorize, Stream};
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-pub async fn update_spdx() -> Result<PathBuf> {
-    let cache_dir = dirs::cache_dir()
+pub fn default_cache_dir() -> Result<PathBuf> {
+    Ok(dirs::cache_dir()
         .ok_or_else(|| eyre!("could not obtain cache directory"))?
-        .join("spdx-gen");
+        .join("spdx-gen"))
+}
 
-    let repo_dir = cache_dir.join("license-list-data-main");
-    let updated_file = cache_dir.join("updated");
+pub fn repo_dir(cache_dir: &Path) -> PathBuf {
+    cache_dir.join("license-list-data-main")
+}
+
+pub fn updated_file(cache_dir: &Path) -> PathBuf {
+    cache_dir.join("updated")
+}
+
+pub async fn update(cache_dir: &Path) -> Result<()> {
+    let repo_dir = repo_dir(cache_dir);
+    let updated_file = updated_file(cache_dir);
+
+    eprintln!(
+        "{} Updating SPDX license data...",
+        "↓".if_supports_color(Stream::Stderr, |t| t.cyan())
+    );
+
+    let _ = fs::remove_dir_all(&repo_dir).await;
+
+    let mut response =
+        reqwest::get("https://github.com/spdx/license-list-data/archive/refs/heads/main.tar.gz")
+            .await?
+            .error_for_status()?;
+
+    let mut data = Vec::new();
+
+    while let Some(chunk) = response.chunk().await? {
+        data.extend(&chunk);
+    }
+
+    let decoder = GzDecoder::new(Cursor::new(data));
+    let mut archive = Archive::new(decoder);
+    archive.unpack(cache_dir)?;
+
+    let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis();
+    fs::write(&updated_file, now.to_string()).await?;
+
+    Ok(())
+}
+
+pub async fn auto_update(cache_dir: &Path) -> Result<()> {
+    let repo_dir = repo_dir(cache_dir);
+    let updated_file = updated_file(cache_dir);
 
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis();
 
@@ -26,31 +68,8 @@ pub async fn update_spdx() -> Result<PathBuf> {
         .is_ok_and(|s| s.parse::<u128>().is_ok_and(|st| now - st <= 1_209_600_000))
         || !repo_dir.exists()
     {
-        eprintln!(
-            "{} Updating SPDX license data...",
-            "↓".if_supports_color(Stream::Stderr, |t| t.cyan())
-        );
-
-        let _ = fs::remove_dir_all(&repo_dir).await;
-
-        let mut response = reqwest::get(
-            "https://github.com/spdx/license-list-data/archive/refs/heads/main.tar.gz",
-        )
-        .await?
-        .error_for_status()?;
-
-        let mut data = Vec::new();
-
-        while let Some(chunk) = response.chunk().await? {
-            data.extend(&chunk);
-        }
-
-        let decoder = GzDecoder::new(Cursor::new(data));
-        let mut archive = Archive::new(decoder);
-        archive.unpack(&cache_dir)?;
-
-        fs::write(&updated_file, now.to_string()).await?;
+        update(cache_dir).await?;
     }
 
-    Ok(repo_dir)
+    Ok(())
 }
