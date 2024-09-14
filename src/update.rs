@@ -5,16 +5,17 @@ use std::{
 };
 use tokio::fs;
 
-use eyre::Result;
+use eyre::{eyre, Result};
 use owo_colors::{OwoColorize, Stream};
 
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-use xdg::BaseDirectories;
-
 pub async fn update_spdx() -> Result<PathBuf> {
-    let cache_dir = BaseDirectories::new()?.create_cache_directory("spdx-gen")?;
+    let cache_dir = dirs::cache_dir()
+        .ok_or_else(|| eyre!("could not obtain cache directory"))?
+        .join("spdx-gen");
+
     let repo_dir = cache_dir.join("license-list-data-main");
     let updated_file = cache_dir.join("updated");
 

@@ -24,7 +24,7 @@ struct Cli {
     #[clap(short, long, value_hint = ValueHint::FilePath)]
     output: Option<PathBuf>,
 
-    /// Cache directory to use (defaults to "$XDG_CACHE_HOME/spdx-gen")
+    /// Cache directory to use (default is dependent on platform)
     #[clap(long)]
     cache_dir: Option<PathBuf>,
 
