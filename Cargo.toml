@@ -4,7 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 description = "SPDX license generator"
+authors = ["Ryan Cao <hello@ryanccn.dev>"]
 license = "GPL-3.0-only"
+repository = "https://github.com/ryanccn/spdx-gen.git"
+
+categories = ["command-line-utilities", "development-tools"]
+keywords = ["license", "spdx", "generator"]
 
 [dependencies]
 clap = { version = "4.5.17", features = ["derive"] }
