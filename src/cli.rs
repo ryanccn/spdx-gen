@@ -26,10 +26,10 @@ pub struct Cli {
     pub cache_dir: Option<PathBuf>,
 
     /// Update the cache without doing anything else
-    #[clap(long, exclusive = true)]
+    #[clap(long)]
     pub update: bool,
 
     /// Generate completions for a specific shell
-    #[clap(long, exclusive = true)]
+    #[clap(long)]
     pub completions: Option<clap_complete::Shell>,
 }

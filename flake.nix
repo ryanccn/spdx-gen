@@ -1,11 +1,4 @@
 {
-  description = "Minimal, blazing fast npm scripts runner";
-
-  nixConfig = {
-    extra-substituters = [ "https://cache.garnix.io" ];
-    extra-trusted-public-keys = [ "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g=" ];
-  };
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nix-filter.url = "github:numtide/nix-filter";
@@ -119,7 +112,6 @@
 
             inputsFrom = [ self.packages.${system}.spdx-gen ];
 
-            __structuredAttrs = true;
             env = {
               RUST_BACKTRACE = 1;
               RUST_SRC_PATH = toString pkgs.rustPlatform.rustLibSrc;
@@ -132,8 +124,6 @@
         system:
         let
           pkgs = nixpkgsFor.${system};
-
-          # re-use our overlay to call packages
           packages = self.overlays.default null pkgs;
         in
         {
