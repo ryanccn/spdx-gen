@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2024 Ryan Cao <hello@ryanccn.dev>
+#
+# SPDX-License-Identifier: GPL-3.0-only
+
 {
   lib,
   stdenv,

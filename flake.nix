@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2024 Ryan Cao <hello@ryanccn.dev>
+#
+# SPDX-License-Identifier: GPL-3.0-only
+
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -33,21 +37,27 @@
               name,
               nativeBuildInputs ? [ ],
               command,
+              extraConfig ? { },
             }:
-            pkgs.stdenv.mkDerivation {
-              name = "check-${name}";
-              inherit nativeBuildInputs;
-              inherit (self.packages.${system}.spdx-gen) src cargoDeps;
+            pkgs.stdenv.mkDerivation (
+              {
+                name = "check-${name}";
 
-              buildPhase = ''
-                ${command}
-                touch "$out"
-              '';
+                inherit nativeBuildInputs;
+                inherit (self.packages.${system}.spdx-gen) src cargoDeps;
 
-              doCheck = false;
-              dontInstall = true;
-              dontFixup = true;
-            };
+                buildPhase = ''
+                  set -eu
+                  ${command}
+                  touch "$out"
+                '';
+
+                doCheck = false;
+                dontInstall = true;
+                dontFixup = true;
+              }
+              // extraConfig
+            );
         in
         {
           nixfmt = mkFlakeCheck {
@@ -85,6 +95,22 @@
                 | clippy-sarif | tee $out | sarif-fmt
             '';
           };
+
+          reuse = mkFlakeCheck {
+            name = "reuse";
+            extraConfig = {
+              src = self;
+            };
+
+            nativeBuildInputs = with pkgs; [
+              reuse
+            ];
+
+            command = ''
+              reuse lint
+              reuse spdx > "$out"
+            '';
+          };
         }
       );
 
@@ -100,8 +126,7 @@
               clippy
               rust-analyzer
 
-              git-cliff # changelog generator
-              taplo # TOML toolkit
+              reuse
 
               cargo-audit
               cargo-bloat
