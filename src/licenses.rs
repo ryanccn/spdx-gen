@@ -24,14 +24,14 @@ pub struct License {
     pub deprecated: bool,
 }
 
-pub async fn read_licenses(cache_dir: &Path) -> Result<Vec<License>> {
+pub async fn read_licenses(cache_dir: &Path, allow_deprecated: bool) -> Result<Vec<License>> {
     let data = fs::read(repo_dir(cache_dir).join("json").join("licenses.json")).await?;
     let manifest: LicenseManifest = serde_json::from_slice(&data)?;
 
     Ok(manifest
         .licenses
         .into_iter()
-        .filter(|l| !l.deprecated)
+        .filter(|l| allow_deprecated || !l.deprecated)
         .collect())
 }
 

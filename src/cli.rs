@@ -8,6 +8,7 @@ use clap::{Parser, ValueHint};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Cli {
     /// An SPDX license identifier (prompts with select if not provided)
     #[clap(short, long, env = "SPDX_GEN_LICENSE")]
@@ -20,6 +21,10 @@ pub struct Cli {
     /// Overwrite if output file already exists
     #[clap(short, long, env = "SPDX_GEN_FORCE")]
     pub force: bool,
+
+    /// Don't automatically update the cache
+    #[clap(long, env = "SPDX_GEN_ALLOW_DEPRECATED")]
+    pub allow_deprecated: bool,
 
     /// Don't automatically update the cache
     #[clap(long, env = "SPDX_GEN_NO_UPDATE")]

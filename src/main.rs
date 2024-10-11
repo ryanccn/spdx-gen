@@ -51,14 +51,19 @@ async fn main() -> Result<()> {
         auto_update(&cache_dir).await?;
     }
 
-    let licenses = read_licenses(&cache_dir).await?;
+    let licenses = read_licenses(&cache_dir, cli.allow_deprecated).await?;
 
     eprintln!(
-        "{} {} SPDX licenses supported",
+        "{} {} SPDX licenses supported{}",
         "i".if_supports_color(Stream::Stderr, |t| t.blue()),
         licenses
             .len()
-            .if_supports_color(Stream::Stderr, |t| t.bold())
+            .if_supports_color(Stream::Stderr, |t| t.bold()),
+        if cli.allow_deprecated {
+            " (including deprecated)".yellow().to_string()
+        } else {
+            String::new()
+        }
     );
 
     let license_idx = match &cli.license {

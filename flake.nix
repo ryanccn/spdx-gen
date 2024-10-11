@@ -44,7 +44,7 @@
                 name = "check-${name}";
 
                 inherit nativeBuildInputs;
-                inherit (self.packages.${system}.spdx-gen) src cargoDeps;
+                inherit (self.packages.${system}.spdx-gen) src;
 
                 buildPhase = ''
                   set -eu
@@ -94,6 +94,10 @@
                 --offline --message-format=json \
                 | clippy-sarif | tee $out | sarif-fmt
             '';
+
+            extraConfig = {
+              inherit (self.packages.${system}.spdx-gen) cargoDeps;
+            };
           };
 
           reuse = mkFlakeCheck {
@@ -155,9 +159,6 @@
           inherit (packages) spdx-gen;
           default = packages.spdx-gen;
         }
-        // (lib.attrsets.mapAttrs' (
-          name: value: lib.nameValuePair "check-${name}" value
-        ) self.checks.${system})
       );
 
       legacyPackages = forAllSystems (
