@@ -2,15 +2,16 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
+use crossterm::{cursor, terminal, ExecutableCommand as _};
 use std::{
-    io::Cursor,
+    io::{self, Cursor},
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
 use tokio::fs;
 
 use eyre::{eyre, Result};
-use owo_colors::{OwoColorize, Stream};
+use owo_colors::{OwoColorize as _, Stream};
 
 use flate2::read::GzDecoder;
 use tar::Archive;
@@ -33,23 +34,45 @@ pub async fn update(cache_dir: &Path) -> Result<()> {
     let repo_dir = repo_dir(cache_dir);
     let updated_file = updated_file(cache_dir);
 
-    eprintln!(
-        "{} Updating SPDX license data...",
+    eprint!(
+        "{} Updating SPDX license data... ",
         "↓".if_supports_color(Stream::Stderr, |t| t.cyan())
     );
 
+    io::stderr().execute(cursor::SavePosition)?;
+
     let _ = fs::remove_dir_all(&repo_dir).await;
 
-    let mut response =
-        reqwest::get("https://github.com/spdx/license-list-data/archive/refs/heads/main.tar.gz")
-            .await?
-            .error_for_status()?;
+    let client = reqwest::Client::builder().https_only(true).build()?;
+
+    let mut response = client
+        .get("https://github.com/spdx/license-list-data/archive/refs/heads/main.tar.gz")
+        .send()
+        .await?
+        .error_for_status()?;
 
     let mut data = Vec::new();
 
     while let Some(chunk) = response.chunk().await? {
         data.extend(&chunk);
+
+        io::stderr()
+            .execute(cursor::RestorePosition)?
+            .execute(terminal::Clear(terminal::ClearType::UntilNewLine))?;
+
+        eprint!(
+            "{}",
+            humansize::format_size(
+                data.len(),
+                humansize::FormatSizeOptions::default()
+                    .space_after_value(true)
+                    .decimal_places(1)
+            )
+            .if_supports_color(Stream::Stderr, |t| t.dimmed()),
+        );
     }
+
+    eprintln!();
 
     let decoder = GzDecoder::new(Cursor::new(data));
     let mut archive = Archive::new(decoder);
