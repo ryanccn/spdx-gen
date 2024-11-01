@@ -2,22 +2,21 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
-use std::io;
-use std::{fs, path::PathBuf};
+use eyre::{eyre, Result};
+use std::{fs, io, path::PathBuf};
 
 use clap::{CommandFactory as _, Parser as _};
 
+use anstream::eprintln;
 use dialoguer::{theme::ColorfulTheme, Confirm, FuzzySelect};
-use eyre::{eyre, Result};
-use owo_colors::{OwoColorize as _, Stream};
+use owo_colors::OwoColorize as _;
 
 mod cli;
 mod licenses;
 mod update;
 
 use crate::cli::Cli;
-use crate::licenses::{read_license_text, read_licenses};
-use crate::update::{auto_update, default_cache_dir, update};
+use crate::update::{auto_update, default_cache_dir_path, update};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -39,7 +38,7 @@ async fn main() -> Result<()> {
 
     let cache_dir = match cli.cache_dir {
         Some(cache_dir) => cache_dir,
-        None => default_cache_dir()?,
+        None => default_cache_dir_path()?,
     };
 
     if cli.update {
@@ -51,14 +50,12 @@ async fn main() -> Result<()> {
         auto_update(&cache_dir).await?;
     }
 
-    let licenses = read_licenses(&cache_dir, cli.allow_deprecated).await?;
+    let licenses = licenses::read_manifest(&cache_dir, cli.allow_deprecated).await?;
 
     eprintln!(
         "{} {} SPDX licenses supported{}",
-        "i".if_supports_color(Stream::Stderr, |t| t.blue()),
-        licenses
-            .len()
-            .if_supports_color(Stream::Stderr, |t| t.bold()),
+        "i".blue(),
+        licenses.len().bold(),
         if cli.allow_deprecated {
             " (including deprecated)".yellow().to_string()
         } else {
@@ -69,7 +66,7 @@ async fn main() -> Result<()> {
     let license_idx = match &cli.license {
         Some(license) => licenses
             .iter()
-            .position(|l| l.id.to_lowercase() == license.to_lowercase())
+            .position(|l| l.id.eq_ignore_ascii_case(license))
             .ok_or_else(|| eyre!("Invalid SPDX license identifier provided"))?,
 
         None => FuzzySelect::with_theme(&ColorfulTheme::default())
@@ -82,11 +79,7 @@ async fn main() -> Result<()> {
     let license = &licenses[license_idx];
 
     if cli.license.is_some() {
-        eprintln!(
-            "{} Selected {} via CLI",
-            "✔".if_supports_color(Stream::Stderr, |s| s.green()),
-            license.id.if_supports_color(Stream::Stderr, |s| s.bold()),
-        );
+        eprintln!("{} Selected {} via CLI", "✔".green(), license.id.bold());
     }
 
     let output = cli.output.unwrap_or_else(|| PathBuf::from("LICENSE"));
@@ -97,22 +90,20 @@ async fn main() -> Result<()> {
             .with_prompt(format!("{} already exists. Overwrite?", output.display()))
             .interact()?
     {
-        let text = read_license_text(&cache_dir, license).await?;
+        let text = licenses::read_text(&cache_dir, license).await?;
         fs::write(output, &text)?;
 
         eprintln!(
             "{} Wrote {} ({}).",
-            "✔".if_supports_color(Stream::Stderr, |s| s.green()),
+            "✔".green(),
             license.name.bold(),
             license.id
         );
 
         eprintln!(
             "{} {}",
-            "!".if_supports_color(Stream::Stderr, |s| s.yellow())
-                .if_supports_color(Stream::Stderr, |s| s.dimmed()),
-            "Check the license for placeholders to replace with your information!"
-                .if_supports_color(Stream::Stderr, |s| s.dimmed())
+            "!".yellow().dimmed(),
+            "Check the license for placeholders to replace with your information!".dimmed()
         );
     }
 

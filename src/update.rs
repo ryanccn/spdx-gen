@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
-use crossterm::{cursor, terminal, ExecutableCommand as _};
+use eyre::{eyre, Result};
 use std::{
     io::{self, Cursor},
     path::{Path, PathBuf},
@@ -10,34 +10,32 @@ use std::{
 };
 use tokio::fs;
 
-use eyre::{eyre, Result};
-use owo_colors::{OwoColorize as _, Stream};
+use anstream::{eprint, eprintln};
+use crossterm::{cursor, terminal, ExecutableCommand as _};
+use owo_colors::OwoColorize as _;
 
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-pub fn default_cache_dir() -> Result<PathBuf> {
+pub fn default_cache_dir_path() -> Result<PathBuf> {
     Ok(dirs::cache_dir()
         .ok_or_else(|| eyre!("could not obtain cache directory"))?
         .join("spdx-gen"))
 }
 
-pub fn repo_dir(cache_dir: &Path) -> PathBuf {
+pub fn repo_path(cache_dir: &Path) -> PathBuf {
     cache_dir.join("license-list-data-main")
 }
 
-pub fn updated_file(cache_dir: &Path) -> PathBuf {
+pub fn updated_file_path(cache_dir: &Path) -> PathBuf {
     cache_dir.join("updated")
 }
 
 pub async fn update(cache_dir: &Path) -> Result<()> {
-    let repo_dir = repo_dir(cache_dir);
-    let updated_file = updated_file(cache_dir);
+    let repo_dir = repo_path(cache_dir);
+    let updated_file = updated_file_path(cache_dir);
 
-    eprint!(
-        "{} Updating SPDX license data... ",
-        "↓".if_supports_color(Stream::Stderr, |t| t.cyan())
-    );
+    eprint!("{} Updating SPDX license data... ", "↓".cyan());
 
     io::stderr().execute(cursor::SavePosition)?;
 
@@ -62,13 +60,7 @@ pub async fn update(cache_dir: &Path) -> Result<()> {
 
         eprint!(
             "{}",
-            humansize::format_size(
-                data.len(),
-                humansize::FormatSizeOptions::default()
-                    .space_after_value(true)
-                    .decimal_places(1)
-            )
-            .if_supports_color(Stream::Stderr, |t| t.dimmed()),
+            humansize::format_size(data.len(), humansize::DECIMAL).dimmed(),
         );
     }
 
@@ -85,8 +77,8 @@ pub async fn update(cache_dir: &Path) -> Result<()> {
 }
 
 pub async fn auto_update(cache_dir: &Path) -> Result<()> {
-    let repo_dir = repo_dir(cache_dir);
-    let updated_file = updated_file(cache_dir);
+    let repo_dir = repo_path(cache_dir);
+    let updated_file = updated_file_path(cache_dir);
 
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis();
 
