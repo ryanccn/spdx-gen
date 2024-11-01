@@ -22,7 +22,7 @@ pub struct Cli {
     #[clap(short, long, env = "SPDX_GEN_FORCE")]
     pub force: bool,
 
-    /// Don't automatically update the cache
+    /// Allow deprecated licenses
     #[clap(long, env = "SPDX_GEN_ALLOW_DEPRECATED")]
     pub allow_deprecated: bool,
 
