@@ -18,7 +18,7 @@ keywords = ["license", "spdx", "generator"]
 [dependencies]
 anstream = "0.6.17"
 clap = { version = "4.5.20", features = ["derive", "env"] }
-clap_complete = "4.5.36"
+clap_complete = "4.5.37"
 color-eyre = "0.6.3"
 crossterm = "0.28.1"
 dialoguer = { version = "0.11.0", default-features = false, features = ["fuzzy-select"] }
@@ -35,7 +35,7 @@ tokio = { version = "1.41.0", features = ["full"] }
 
 [build-dependencies]
 clap = { version = "4.5.20", features = ["derive", "env"] }
-clap_complete = "4.5.36"
+clap_complete = "4.5.37"
 
 [lints.clippy]
 all = { level = "warn", priority = -1 }
