@@ -16,7 +16,7 @@ categories = ["command-line-utilities", "development-tools"]
 keywords = ["license", "spdx", "generator"]
 
 [dependencies]
-anstream = "0.6.17"
+anstream = "0.6.18"
 clap = { version = "4.5.20", features = ["derive", "env"] }
 clap_complete = "4.5.36"
 color-eyre = "0.6.3"
