@@ -19,9 +19,9 @@ fn main() -> Result<(), Error> {
 
     if let Some(completions_out_dir) = &completions_out_dir {
         match fs::create_dir_all(completions_out_dir) {
-            Ok(()) => (),
+            Ok(()) => {}
             Err(err) => match err.kind() {
-                ErrorKind::AlreadyExists => (),
+                ErrorKind::AlreadyExists => {}
                 _ => return Err(err),
             },
         }

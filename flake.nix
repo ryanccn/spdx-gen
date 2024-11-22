@@ -16,14 +16,8 @@
     }:
     let
       inherit (nixpkgs) lib;
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
-      ];
 
-      forAllSystems = lib.genAttrs systems;
+      forAllSystems = lib.genAttrs lib.systems.flakeExposed;
       nixpkgsFor = forAllSystems (system: nixpkgs.legacyPackages.${system});
     in
     {
