@@ -96,9 +96,8 @@ jobs:
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
-
-      - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@main
+        with:
+          diagnostic-endpoint: ""
 
       - name: Build
         run: nix build --fallback --print-build-logs '.#spdx-gen-static-${{ matrix.target }}'

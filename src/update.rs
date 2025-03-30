@@ -2,20 +2,19 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
-use eyre::{eyre, Result};
+use eyre::{Result, eyre};
 use std::{
-    io::{self, Cursor},
+    io,
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
 use tokio::fs;
 
 use anstream::{eprint, eprintln};
-use crossterm::{cursor, terminal, ExecutableCommand as _};
+use crossterm::{ExecutableCommand as _, cursor, terminal};
 use owo_colors::OwoColorize as _;
 
 use flate2::read::GzDecoder;
-use tar::Archive;
 
 pub fn default_cache_dir_path() -> Result<PathBuf> {
     Ok(dirs::cache_dir()
@@ -66,8 +65,8 @@ pub async fn update(cache_dir: &Path) -> Result<()> {
 
     eprintln!();
 
-    let decoder = GzDecoder::new(Cursor::new(data));
-    let mut archive = Archive::new(decoder);
+    let decoder = GzDecoder::new(io::Cursor::new(data));
+    let mut archive = tar::Archive::new(decoder);
     archive.unpack(cache_dir)?;
 
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis();

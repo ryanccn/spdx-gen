@@ -8,7 +8,7 @@ use std::{
 };
 
 use clap::{CommandFactory, ValueEnum};
-use clap_complete::{generate_to, Shell};
+use clap_complete::{Shell, generate_to};
 
 include!("src/cli.rs");
 

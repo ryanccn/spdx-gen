@@ -5,7 +5,6 @@
 {
   lib,
   rustPlatform,
-  nix-filter,
   installShellFiles,
   self,
   enableLTO ? true,
@@ -16,19 +15,17 @@ let
   month = builtins.substring 4 2 self.lastModifiedDate;
   day = builtins.substring 6 2 self.lastModifiedDate;
 in
-rustPlatform.buildRustPackage rec {
-  pname = passthru.cargoToml.package.name;
-  version = passthru.cargoToml.package.version + "-unstable-${year}-${month}-${day}";
+rustPlatform.buildRustPackage (finalAttrs: {
+  pname = finalAttrs.passthru.cargoToml.package.name;
+  version = finalAttrs.passthru.cargoToml.package.version + "-unstable-${year}-${month}-${day}";
 
-  strictDeps = true;
-
-  src = nix-filter.lib.filter {
-    root = self;
-    include = [
-      "src"
-      "build.rs"
-      "Cargo.lock"
-      "Cargo.toml"
+  src = lib.fileset.toSource {
+    root = ../.;
+    fileset = lib.fileset.unions [
+      ../src
+      ../build.rs
+      ../Cargo.lock
+      ../Cargo.toml
     ];
   };
 
@@ -59,10 +56,10 @@ rustPlatform.buildRustPackage rec {
   '';
 
   postInstall = ''
-    installShellCompletion --cmd ${pname} \
-      --bash "$TMPDIR/completions/${pname}.bash" \
-      --zsh "$TMPDIR/completions/_${pname}" \
-      --fish "$TMPDIR/completions/${pname}.fish"
+    installShellCompletion --cmd ${finalAttrs.pname} \
+      --bash "$TMPDIR/completions/${finalAttrs.pname}.bash" \
+      --zsh "$TMPDIR/completions/_${finalAttrs.pname}" \
+      --fish "$TMPDIR/completions/${finalAttrs.pname}.fish"
   '';
 
   passthru = {
@@ -75,4 +72,4 @@ rustPlatform.buildRustPackage rec {
     license = licenses.gpl3Only;
     mainProgram = "spdx-gen";
   };
-}
+})

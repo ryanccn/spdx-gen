@@ -2,13 +2,13 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
-use eyre::{eyre, Result};
+use eyre::{Result, eyre};
 use std::{fs, io, path::PathBuf};
 
 use clap::{CommandFactory as _, Parser as _};
 
 use anstream::eprintln;
-use dialoguer::{theme::ColorfulTheme, Confirm, FuzzySelect};
+use dialoguer::{Confirm, FuzzySelect, theme::ColorfulTheme};
 use owo_colors::OwoColorize as _;
 
 mod cli;
