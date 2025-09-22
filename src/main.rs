@@ -72,7 +72,7 @@ async fn main() -> Result<()> {
         None => FuzzySelect::with_theme(&ColorfulTheme::default())
             .with_prompt("Select an SPDX license")
             .max_length(5)
-            .items(&licenses.iter().map(|l| l.name.clone()).collect::<Vec<_>>())
+            .items(licenses.iter().map(|l| l.name.clone()))
             .interact()?,
     };
 

@@ -41,13 +41,14 @@ pub async fn read_manifest(cache_dir: &Path, allow_deprecated: bool) -> Result<V
 pub async fn read_text(cache_dir: &Path, license: &License) -> Result<String> {
     Ok(
         fs::read_to_string(update::repo_path(cache_dir).join("text").join(format!(
-        "{}{}.txt",
-        license
-            .deprecated
-            .then_some("deprecated_")
-            .unwrap_or_default(),
-        license.id
-    )))
+            "{}{}.txt",
+            if license.deprecated {
+                "deprecated_"
+            } else {
+                ""
+            },
+            license.id
+        )))
         .await?,
     )
 }
