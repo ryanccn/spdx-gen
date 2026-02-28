@@ -56,7 +56,7 @@ jobs:
         if: ${{ inputs.disable-cache != true }}
 
       - name: Install cargo-auditable
-        uses: taiki-e/install-action@470679bc3a1580072dac4e67535d1aa3a3dcdf51 # ratchet:taiki-e/install-action@v2
+        uses: taiki-e/install-action@2dc1234c293fde032a8e34c74501c7d6403e92ae # ratchet:taiki-e/install-action@v2
         with:
           tool: cargo-auditable
 
@@ -67,7 +67,7 @@ jobs:
           CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
 
       - name: Generate build provenance attestations
-        uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f # ratchet:actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # ratchet:actions/attest-build-provenance@v3
         if: ${{ github.event_name != 'pull_request' }}
         with:
           subject-path: |
@@ -75,7 +75,7 @@ jobs:
             ./target/${{ matrix.target }}/release/spdx-gen.exe
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # ratchet:actions/upload-artifact@v4
         with:
           if-no-files-found: "error"
           name: spdx-gen-${{ matrix.target }}
@@ -107,13 +107,13 @@ jobs:
         run: nix build --fallback --print-build-logs '.#spdx-gen-static-${{ matrix.target }}'
 
       - name: Generate build provenance attestations
-        uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f # ratchet:actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # ratchet:actions/attest-build-provenance@v3
         if: ${{ github.event_name != 'pull_request' }}
         with:
           subject-path: ./result/bin/spdx-gen
 
       - name: Upload artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # ratchet:actions/upload-artifact@v4
         with:
           if-no-files-found: "error"
           name: spdx-gen-${{ matrix.target }}
