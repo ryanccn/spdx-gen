@@ -56,7 +56,7 @@ jobs:
         if: ${{ inputs.disable-cache != true }}
 
       - name: Install cargo-auditable
-        uses: taiki-e/install-action@0cccd59f03b32c54f0db097c518c320bfc8c73b3 # ratchet:taiki-e/install-action@v2
+        uses: taiki-e/install-action@7a4939c09608b2a1986b484eca1d16fd0db8ebef # ratchet:taiki-e/install-action@v2
         with:
           tool: cargo-auditable
 
@@ -75,7 +75,7 @@ jobs:
             ./target/${{ matrix.target }}/release/spdx-gen.exe
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # ratchet:actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7
         with:
           if-no-files-found: "error"
           name: spdx-gen-${{ matrix.target }}
@@ -101,7 +101,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
 
       - name: Install Nix
-        uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe # ratchet:cachix/install-nix-action@v31.10.3
+        uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # ratchet:cachix/install-nix-action@v31.10.4
 
       - name: Build
         run: nix build --fallback --print-build-logs '.#spdx-gen-static-${{ matrix.target }}'
@@ -113,7 +113,7 @@ jobs:
           subject-path: ./result/bin/spdx-gen
 
       - name: Upload artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # ratchet:actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7
         with:
           if-no-files-found: "error"
           name: spdx-gen-${{ matrix.target }}
