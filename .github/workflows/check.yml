@@ -21,13 +21,13 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
 
       - name: Install Nix
-        uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe # ratchet:cachix/install-nix-action@v31.10.3
+        uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # ratchet:cachix/install-nix-action@v31.10.4
 
       - name: Check
         run: nix build --fallback --print-build-logs '.#checks.x86_64-linux.clippy'
 
       - name: Upload analysis results
-        uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # ratchet:github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # ratchet:github/codeql-action/upload-sarif@v4.35.1
         with:
           sarif_file: result
           wait-for-processing: true
@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
 
       - name: Install Nix
-        uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe # ratchet:cachix/install-nix-action@v31.10.3
+        uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # ratchet:cachix/install-nix-action@v31.10.4
 
       - name: Check
         run: nix build --fallback --print-build-logs '.#checks.x86_64-linux.rustfmt'
@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
 
       - name: Install Nix
-        uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe # ratchet:cachix/install-nix-action@v31.10.3
+        uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # ratchet:cachix/install-nix-action@v31.10.4
 
       - name: Check
         run: nix build --fallback --print-build-logs '.#checks.x86_64-linux.nixfmt'
@@ -66,7 +66,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
 
       - name: Install Nix
-        uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe # ratchet:cachix/install-nix-action@v31.10.3
+        uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # ratchet:cachix/install-nix-action@v31.10.4
 
       - name: Check
         run: nix build --fallback --print-build-logs '.#checks.x86_64-linux.reuse'
